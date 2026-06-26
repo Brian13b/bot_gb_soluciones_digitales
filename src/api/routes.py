@@ -91,11 +91,16 @@ async def handle_message(request: Request, db: Session = Depends(get_db)):
                 
                 conversation = crud.get_or_create_conversation(db, session_id=numero_cliente, channel="whatsapp")
                 
+                history = crud.get_conversation_history(db, conversation.id)
+                if len(history) == 0:
+                    bienvenida = "¡Hola! Soy GiBi, el asistente virtual de GB Soluciones Digitales. ¿En qué te puedo ayudar hoy?"
+                    crud.add_message(db, conversation.id, role="assistant", content=bienvenida)
+                    await enviar_mensaje_whatsapp(numero_cliente, bienvenida)
+                    return {"status": "ok"}
+                
                 crud.add_message(db, conversation.id, role="user", content=mensaje_usuario)
                 
-                history = crud.get_conversation_history(db, conversation.id)
-                
-                respuesta_ia = bot.procesar(mensaje_usuario, history=history)
+                respuesta_ia = bot.procesar(mensaje_usuario, history=history, channel="whatsapp")
                 
                 crud.add_message(db, conversation.id, role="assistant", content=respuesta_ia)
                 
