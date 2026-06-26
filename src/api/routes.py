@@ -1,4 +1,5 @@
 import os
+import re
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
@@ -25,6 +26,20 @@ async def chat_web(request_data: ChatWebRequest, db: Session = Depends(get_db)):
     
     crud.add_message(db, conversation.id, role="user", content=request_data.mensaje)
     
+    mensaje_limpio = request_data.mensaje.replace(" ", "").replace("-", "")
+    telefono_match = re.search(r'\b\d{7,15}\b', mensaje_limpio)
+    email_match = re.search(r'[\w\.-]+@[\w\.-]+\.\w+', request_data.mensaje)
+
+    dato_contacto = None
+    if telefono_match:
+        dato_contacto = telefono_match.group()
+    elif email_match:
+        dato_contacto = email_match.group()
+
+    if dato_contacto:
+        crud.update_conversation_state(db, conversation.id, contact_info=dato_contacto, estado="B")
+        conversation.estado = "B"
+        
     history = crud.get_conversation_history(db, conversation.id)
     
     respuesta_ia = bot.procesar(request_data.mensaje, history=history)
