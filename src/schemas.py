@@ -17,13 +17,13 @@ class ChatResponse(BaseModel):
 # ==========================================
 # SCHEMAS PARA WHATSAPP (Futuro)
 # ==========================================
-# class WhatsAppMessage(BaseModel):
-#     from_number: str
-#     text: str
-#
-# class WhatsAppPayload(BaseModel):
-#     object: str
-#     entry: List[dict] 
+class WhatsAppMessage(BaseModel):
+    from_number: str
+    text: str
+
+class WhatsAppPayload(BaseModel):
+    object: str
+    entry: List[dict] 
 
 # ==========================================
 # SCHEMAS PARA EL PANEL DE ADMIN (Lectura)
