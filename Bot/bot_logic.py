@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
-from src.services.servicio_manager import ServicioManager
+from Bot.services.servicio_manager import ServicioManager
 
 load_dotenv()
 

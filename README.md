@@ -122,7 +122,7 @@ PHONE_NUMBER_ID=your-phone-id-here
 ### Pruebas Locales
 ```bash
 # Terminal 1: Ejecutar servidor
-uvicorn src.main:app --reload
+uvicorn Bot.main:app --reload
 
 # Terminal 2: Probar webhook (local)
 curl -X POST http://localhost:8000/webhook \

@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from src.database import engine, Base
-from src.api.routes import router
+from database import engine, Base
+from Bot.api.routes import router
 
 Base.metadata.create_all(bind=engine)
 

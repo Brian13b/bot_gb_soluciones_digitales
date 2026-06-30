@@ -4,10 +4,10 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
-from src.database import get_db
-from src.schemas import ChatWebRequest, ChatResponse
-from src import crud
-from src.bot_logic import BotLogic
+from Bot.database import get_db
+from Bot.schemas import ChatWebRequest, ChatResponse
+from Bot import crud
+from Bot.bot_logic import BotLogic
 
 router = APIRouter()
 bot = BotLogic()
