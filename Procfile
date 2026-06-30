@@ -1,1 +1,1 @@
-web: uvicorn Bot.main:app --host 0.0.0.0 --port $PORT
+web: python -m uvicorn Bot.main:app --host 0.0.0.0 --port 8000
