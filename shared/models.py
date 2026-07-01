@@ -1,13 +1,34 @@
-"""
-Unified SQLAlchemy ORM models for Bot and Admin services.
-Single source of truth for database schema to prevent divergence.
-"""
-
 import uuid
-from sqlalchemy import Column, String, DateTime, Boolean, Text, ForeignKey, func
+from sqlalchemy import Column, String, DateTime, Boolean, Text, ForeignKey, func, Float, Enum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base, relationship
 from datetime import datetime
+import enum
+
+
+class ContactType(str, enum.Enum):
+    PRIMARY = "PRIMARY"
+    ALTERNATIVE = "ALTERNATIVE"
+
+
+class SourceField(str, enum.Enum):
+    FROM_MESSAGE = "FROM_MESSAGE"
+    FROM_WHATSAPP_HEADER = "FROM_WHATSAPP_HEADER"
+    FROM_FORM = "FROM_FORM"
+    MANUAL = "MANUAL"
+
+
+class ExtractionMethod(str, enum.Enum):
+    REGEX = "REGEX"
+    EXPLICIT_QUESTION = "EXPLICIT_QUESTION"
+    USER_INPUT = "USER_INPUT"
+    ADMIN_MANUAL = "ADMIN_MANUAL"
+
+
+class ValidationStatus(str, enum.Enum):
+    PENDING = "PENDING"
+    VERIFIED = "VERIFIED"
+    INVALID = "INVALID"
 
 Base = declarative_base()
 
@@ -16,7 +37,6 @@ Base = declarative_base()
 # MODEL: User (Admin Panel)
 # ==========================================
 class User(Base):
-    """Admin user account for dashboard access."""
     __tablename__ = "users"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -37,32 +57,26 @@ class User(Base):
 # MODEL: Conversation (Bot Visitors + Admin Data)
 # ==========================================
 class Conversation(Base):
-    """
-    Conversation between visitor/client and bot.
-    Unified model with fields from both bot and admin services.
-    """
     __tablename__ = "conversations"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     session_id = Column(String(255), unique=True, nullable=False, index=True)
-    channel = Column(String(50), nullable=False)  # "web" or "whatsapp"
+    channel = Column(String(50), nullable=False)
 
-    # Contact information (captured during conversation)
-    contact_info = Column(String, nullable=True)  # Legacy: simple contact field
+    contact_info = Column(String, nullable=True)
     contact_name = Column(String(255), nullable=True)
     contact_phone = Column(String(20), nullable=True)
     contact_email = Column(String(255), nullable=True)
 
-    # State tracking
-    estado = Column(String(50), default="A", index=True)  # A (Exploration) or B (Lead Ready)
+    estado = Column(String(50), default="A", index=True)
     proyecto_id = Column(UUID(as_uuid=True), nullable=True)
 
-    # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
     messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
+    contacts = relationship("Contact", back_populates="conversation", cascade="all, delete-orphan")
     contact_attempts = relationship("ContactAttempt", back_populates="conversation", cascade="all, delete-orphan")
 
     def __repr__(self):
@@ -73,15 +87,11 @@ class Conversation(Base):
 # MODEL: Message (Chat History)
 # ==========================================
 class Message(Base):
-    """
-    Individual message in a conversation.
-    Stores both user input and bot responses.
-    """
     __tablename__ = "messages"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     conversation_id = Column(UUID(as_uuid=True), ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False)
-    role = Column(String(50), nullable=False)  # "user" or "assistant"
+    role = Column(String(50), nullable=False)
     content = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -93,19 +103,48 @@ class Message(Base):
 
 
 # ==========================================
+# MODEL: Contact (Extracted Contact Data)
+# ==========================================
+class Contact(Base):
+    __tablename__ = "contacts"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    conversation_id = Column(UUID(as_uuid=True), ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False, index=True)
+
+    # Contact data
+    name = Column(String(255), nullable=True)
+    email = Column(String(255), nullable=True, index=True)
+    phone = Column(String(30), nullable=True, index=True)
+
+    # Metadata
+    contact_type = Column(Enum(ContactType), default=ContactType.PRIMARY)
+    source_field = Column(Enum(SourceField), nullable=False)
+    extraction_method = Column(Enum(ExtractionMethod), nullable=False)
+    validation_status = Column(Enum(ValidationStatus), default=ValidationStatus.PENDING)
+    confidence_score = Column(Float, default=0.0)
+
+    # Audit trail
+    captured_by = Column(String(50), nullable=False)
+    captured_at = Column(DateTime, default=datetime.utcnow)
+    validated_at = Column(DateTime, nullable=True)
+
+    # Relationships
+    conversation = relationship("Conversation", back_populates="contacts")
+
+    def __repr__(self):
+        return f"<Contact(id='{self.id}', email='{self.email}', phone='{self.phone}', validation_status='{self.validation_status}')>"
+
+
+# ==========================================
 # MODEL: ContactAttempt (Admin Contact History)
 # ==========================================
 class ContactAttempt(Base):
-    """
-    Record of admin contact attempts with leads.
-    Tracks who contacted which conversation and how.
-    """
     __tablename__ = "contact_attempts"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     conversation_id = Column(UUID(as_uuid=True), ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False)
     developer_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    method = Column(String(50), nullable=False)  # "whatsapp", "email", "call", etc.
+    method = Column(String(50), nullable=False)
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 

@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from bot.database import get_db
 from shared.schemas import ChatWebRequest, ChatResponse
+from shared.models import SourceField, ExtractionMethod
 from bot import crud
 from bot.bot_logic import BotLogic
 from bot.core.config import settings
@@ -22,31 +23,56 @@ async def chat_web(request_data: ChatWebRequest, db: Session = Depends(get_db)):
     """
     Endpoint para el chat flotante de React.
     Recibe un session_id (anónimo) y el mensaje.
+
+    Flujo:
+    1. Obtiene/crea conversación
+    2. Guarda mensaje del usuario
+    3. Obtiene historial
+    4. Procesa con bot (retorna respuesta + extracción JSON)
+    5. Guarda contacto si se extrajo con confianza > 0.7
+    6. Actualiza estado de conversación si se capturó contacto
+    7. Guarda respuesta del bot
     """
     conversation = crud.get_or_create_conversation(db, request_data.session_id, channel="web")
-    
+
     crud.add_message(db, conversation.id, role="user", content=request_data.mensaje)
-    
-    mensaje_limpio = request_data.mensaje.replace(" ", "").replace("-", "")
-    telefono_match = re.search(r'\b\d{7,15}\b', mensaje_limpio)
-    email_match = re.search(r'[\w\.-]+@[\w\.-]+\.\w+', request_data.mensaje)
 
-    dato_contacto = None
-    if telefono_match:
-        dato_contacto = telefono_match.group()
-    elif email_match:
-        dato_contacto = email_match.group()
-
-    if dato_contacto:
-        crud.update_conversation_state(db, conversation.id, contact_info=dato_contacto, estado="B")
-        conversation.estado = "B"
-        
     history = crud.get_conversation_history(db, conversation.id)
-    
-    respuesta_ia = bot.procesar(request_data.mensaje, history=history)
-    
+
+    # NUEVO: bot retorna diccionario con respuesta y extracción
+    bot_output = bot.procesar(request_data.mensaje, history=history, channel="web")
+    respuesta_ia = bot_output["respuesta"]
+    extracted_contact = bot_output.get("extracted_contact", {})
+
+    # NUEVO: Guardar contacto extraído si tiene confianza suficiente
+    if extracted_contact.get("extraction_confidence", 0) > 0.7:
+        extraction_method_str = extracted_contact.get("extraction_method", "none").upper()
+        # Mapear a enum
+        if extraction_method_str == "EXPLICIT_QUESTION":
+            extraction_method = ExtractionMethod.EXPLICIT_QUESTION
+        elif extraction_method_str == "REGEX_DETECTED":
+            extraction_method = ExtractionMethod.REGEX
+        else:
+            extraction_method = ExtractionMethod.USER_INPUT
+
+        contact = crud.save_contact(
+            db,
+            conversation.id,
+            name=extracted_contact.get("name"),
+            email=extracted_contact.get("email"),
+            phone=extracted_contact.get("phone"),
+            source_field=SourceField.FROM_MESSAGE,
+            extraction_method=extraction_method,
+            confidence_score=extracted_contact.get("extraction_confidence", 0.0)
+        )
+
+        # NUEVO: Transicionar a estado B si capturó al menos un dato
+        if contact:
+            conversation.estado = "B"
+            db.commit()
+
     crud.add_message(db, conversation.id, role="assistant", content=respuesta_ia)
-    
+
     return ChatResponse(
         respuesta=respuesta_ia,
         estado_actual=conversation.estado
@@ -114,11 +140,41 @@ async def handle_message(request: Request, db: Session = Depends(get_db)):
                     return {"status": "ok"}
                 
                 crud.add_message(db, conversation.id, role="user", content=mensaje_usuario)
-                
-                respuesta_ia = bot.procesar(mensaje_usuario, history=history, channel="whatsapp")
-                
+
+                # NUEVO: bot retorna diccionario con respuesta y extracción
+                bot_output = bot.procesar(mensaje_usuario, history=history, channel="whatsapp")
+                respuesta_ia = bot_output["respuesta"]
+                extracted_contact = bot_output.get("extracted_contact", {})
+
+                # NUEVO: Guardar contacto extraído si tiene confianza suficiente
+                if extracted_contact.get("extraction_confidence", 0) > 0.7:
+                    extraction_method_str = extracted_contact.get("extraction_method", "none").upper()
+                    # Mapear a enum
+                    if extraction_method_str == "EXPLICIT_QUESTION":
+                        extraction_method = ExtractionMethod.EXPLICIT_QUESTION
+                    elif extraction_method_str == "REGEX_DETECTED":
+                        extraction_method = ExtractionMethod.REGEX
+                    else:
+                        extraction_method = ExtractionMethod.USER_INPUT
+
+                    contact = crud.save_contact(
+                        db,
+                        conversation.id,
+                        name=extracted_contact.get("name"),
+                        email=extracted_contact.get("email"),
+                        phone=extracted_contact.get("phone"),
+                        source_field=SourceField.FROM_WHATSAPP_HEADER,
+                        extraction_method=extraction_method,
+                        confidence_score=extracted_contact.get("extraction_confidence", 0.0)
+                    )
+
+                    # NUEVO: Transicionar a estado B si capturó al menos un dato
+                    if contact:
+                        conversation.estado = "B"
+                        db.commit()
+
                 crud.add_message(db, conversation.id, role="assistant", content=respuesta_ia)
-                
+
                 await enviar_mensaje_whatsapp(numero_cliente, respuesta_ia)
                 
     except Exception as e:
