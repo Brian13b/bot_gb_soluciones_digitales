@@ -71,6 +71,8 @@ class Conversation(Base):
     estado = Column(String(50), default="A", index=True)
     proyecto_id = Column(UUID(as_uuid=True), nullable=True)
 
+    capture_step = Column(String(50), default="NONE", index=True)
+
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
