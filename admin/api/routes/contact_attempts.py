@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from admin.models import ContactAttempt, Conversation, User
-from admin.schemas import ContactAttemptCreate, ContactAttemptSchema
+from shared.schemas import ContactAttemptCreate, ContactAttemptSchema
 from admin.api.deps import get_db, get_current_user
 from uuid import UUID
  

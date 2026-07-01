@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from bot.database import get_db
-from bot.schemas import ChatWebRequest, ChatResponse
+from shared.schemas import ChatWebRequest, ChatResponse
 from bot import crud
 from bot.bot_logic import BotLogic
 

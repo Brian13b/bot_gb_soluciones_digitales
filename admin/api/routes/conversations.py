@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from admin.models import Conversation, Message
-from admin.schemas import ConversationListSchema, ConversationDetailSchema, MessageSchema
+from shared.schemas import ConversationListSchema, ConversationDetailSchema, MessageSchema
 from admin.api.deps import get_db, get_current_user
 from datetime import datetime
 from uuid import UUID

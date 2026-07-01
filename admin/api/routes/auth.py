@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from admin.schemas import LoginRequest, TokenResponse
+from shared.schemas import LoginRequest, TokenResponse
 from admin.models import User
 from admin.core.security import hash_password, verify_password, create_access_token
 from admin.api.deps import get_db
