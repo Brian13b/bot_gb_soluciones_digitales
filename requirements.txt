@@ -1,14 +1,25 @@
-# Dependencias base
+# Core Framework & Server
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
+
+# Database & ORM
 sqlalchemy==2.0.23
 psycopg2-binary==2.9.12
+
+# Data Validation & Configuration
 pydantic==2.5.0
+pydantic-settings==2.1.0
 
--r admin/requirements-admin.txt
--r bot/requirements-bot.txt
+# Authentication & Security
+PyJWT==2.9.0
+passlib[bcrypt]==1.7.4
 
-# Otras dependencias globales
+# AI & External APIs
+openai==1.3.0
+
+# Environment & Utilities
 python-dotenv==1.0.0
 requests==2.31.0
 click==8.2.0
+python-multipart==0.0.6
+httpx==0.24.1
