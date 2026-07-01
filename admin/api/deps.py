@@ -1,5 +1,5 @@
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPCredentials
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from admin.database import SessionLocal
 from admin.core.security import decode_token
@@ -13,7 +13,7 @@ def get_db():
         db.close()
  
 def get_current_user(
-    credentials: HTTPCredentials = Depends(HTTPBearer()),
+    credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()),
     db: Session = Depends(get_db)
 ) -> User:
     try:

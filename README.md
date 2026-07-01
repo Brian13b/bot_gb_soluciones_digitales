@@ -106,7 +106,7 @@ Cliente en Web (Widget) o WhatsApp
 3. Activar entorno: `.\.venv\Scripts\Activate.ps1`
 4. Instalar dependencias: `pip install -r requirements.txt`
 5. Crear archivo `.env` con variables requeridas (ver sección Variables de Entorno abajo)
-6. Ejecutar: `uvicorn src.main:app --reload`
+6. Ejecutar Bot: `uvicorn bot.main:app --reload` (o Admin: `uvicorn admin.main:app --reload`)
 
 ### Variables de Entorno Requeridas
 ```bash
@@ -121,13 +121,13 @@ PHONE_NUMBER_ID=your-phone-id-here
 
 ### Pruebas Locales
 ```bash
-# Terminal 1: Ejecutar servidor
-uvicorn Bot.main:app --reload
+# Terminal 1: Ejecutar servidor Bot
+uvicorn bot.main:app --reload
 
 # Terminal 2: Probar webhook (local)
-curl -X POST http://localhost:8000/webhook \
+curl -X POST http://localhost:8000/api/chat-web \
   -H "Content-Type: application/json" \
-  -d '{"text": "Hola, ¿hacen apps?"}'
+  -d '{"mensaje": "Hola, ¿hacen apps?"}'
 ```
 
 ---
