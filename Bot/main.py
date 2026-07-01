@@ -1,8 +1,7 @@
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from database import engine, Base
-from Bot.api.routes import router
+from bot.database import engine, Base
+from bot.api.routes import router
 
 Base.metadata.create_all(bind=engine)
 
@@ -18,6 +17,6 @@ app.add_middleware(
 
 app.include_router(router, prefix="/api")
 
-@app.get("/")
-async def read_index():
-    return FileResponse("public/index.html")
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
