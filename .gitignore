@@ -1,26 +1,41 @@
-# Entornos
-.venv/
+# Variables de entorno
+.env
+.env.production
+.env.local
+ 
+# Python
 __pycache__/
 *.pyc
-
-# Configuración
-.env
-.env.local
-
-# Logs y bases de datos locales
-*.log
-*.sqlite3
-
-# Carpetas de sistema
-.DS_Store
-
-# Archivos internos (no en GitHub)
-.claude/
-.idea/
+*.pyo
+*.egg-info/
+dist/
+build/
+.Python
+ 
+# Entornos virtuales
+venv/
+.venv/
+env/
+ 
+# IDEs
 .vscode/
-SYSTEM_PROMPTS.md
-
-# IDE y editores
+.idea/
 *.swp
 *.swo
-*~
+ 
+# OS
+.DS_Store
+Thumbs.db
+ 
+# Logs
+logs/
+*.log
+ 
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+ 
+# Other
+*.tmp
+.env.*.local

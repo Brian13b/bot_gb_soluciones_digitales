@@ -101,7 +101,7 @@ Cliente en Web (Widget) o WhatsApp
 ---
 
 ## 🛠 Instalación local
-1. Clonar el repo: `git clone https://github.com/Brian13b/bot_gb_soluciones_digitales.git`
+1. Clonar el repo: `git clone https://github.com/Brian13b/backend_gb_soluciones_digitales.git`
 2. Crear entorno: `python -m venv .venv`
 3. Activar entorno: `.\.venv\Scripts\Activate.ps1`
 4. Instalar dependencias: `pip install -r requirements.txt`

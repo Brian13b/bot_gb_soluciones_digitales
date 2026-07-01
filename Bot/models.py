@@ -4,7 +4,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
-from Bot.database import Base
+from bot.database import Base
 
 class Conversation(Base):
     __tablename__ = "conversations"
