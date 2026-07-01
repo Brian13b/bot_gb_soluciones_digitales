@@ -15,7 +15,8 @@ class Settings:
     CORS_ORIGINS: List[str] = [
         "http://localhost:3000",
         "http://localhost:5173",
-        "https://admin.gbsolucionesdigitales.com.ar"
+        "https://admin.gbsolucionesdigitales.com.ar",
+        "https://admin.gbsolucionesdigitales.com.ar/login"
     ]
     
     ENVIRONMENT: str = os.getenv("API_ENV", "development")
