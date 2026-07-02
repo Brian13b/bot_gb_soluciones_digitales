@@ -95,8 +95,8 @@ class ConversationSchema(ConversationDetailSchema):
 # CONTACT ATTEMPT SCHEMAS (Admin Service)
 # ==========================================
 class ContactAttemptCreate(BaseModel):
-    method: str = Field(..., description="Contact method: whatsapp, email, call, other")
-    notes: Optional[str] = Field(None, description="Additional notes about the attempt")
+    method: str = Field(..., description="Metodo de contacto: whatsapp, email, llamada")
+    notes: Optional[str] = Field(None, description="Notas adicionales sobre el intento")
 
 
 class ContactAttemptSchema(BaseModel):

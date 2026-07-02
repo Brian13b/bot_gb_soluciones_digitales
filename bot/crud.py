@@ -65,19 +65,20 @@ def get_conversation_history(db: Session, conversation_id: uuid.UUID, limit: int
 
 
 def _validate_email(email: str) -> bool:
-    """Valida formato de email con regex"""
+    """Valida formato de email con regex tolerando espacios accidentales"""
     if not email:
         return False
+    clean_email = email.strip()
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    return re.match(pattern, email) is not None
+    return re.match(pattern, clean_email) is not None
 
 
 def _validate_phone(phone: str) -> bool:
     """Valida teléfono: mínimo 7 dígitos (con prefijos internacionales)"""
     if not phone:
         return False
-    # Solo dígitos y símbolos permitidos (+ para código país)
-    cleaned = re.sub(r'[^\d+]', '', phone)
+    phone_str = str(phone).strip()
+    cleaned = re.sub(r'[^\d+]', '', phone_str)
     return len(cleaned) >= 7
 
 
@@ -91,36 +92,16 @@ def save_contact(
     extraction_method: ExtractionMethod = ExtractionMethod.REGEX,
     confidence_score: float = 0.0
 ) -> Contact:
-    """
-    Guarda contacto extraído con validación básica.
-
-    Args:
-        db: Session de SQLAlchemy
-        conversation_id: UUID de la conversación
-        name: Nombre del contacto
-        email: Email del contacto
-        phone: Teléfono del contacto
-        source_field: Origen del campo (FROM_MESSAGE, FROM_WHATSAPP_HEADER, etc.)
-        extraction_method: Método de extracción (REGEX, EXPLICIT_QUESTION, etc.)
-        confidence_score: Confianza de la extracción (0.0-1.0)
-
-    Returns:
-        Contact object creado, o None si no hay datos válidos
-    """
-    # Validar datos
-    validated_email = email if _validate_email(email) else None
-    validated_phone = phone if _validate_phone(phone) else None
+    """Guarda contacto extraído con validación básica."""
+    
+    validated_email = email.strip() if email and _validate_email(email) else None
+    validated_phone = str(phone).strip() if phone and _validate_phone(phone) else None
     validated_name = name.strip() if name and isinstance(name, str) else None
 
-    # No guardar si no hay al menos un dato válido
     if not (validated_name or validated_email or validated_phone):
         return None
 
-    # Determinar validation_status basado en calidad
-    if confidence_score >= 0.8:
-        validation_status = ValidationStatus.PENDING  # Requiere verificación manual si es de alta confianza
-    else:
-        validation_status = ValidationStatus.PENDING
+    validation_status = ValidationStatus.PENDING
 
     contact = Contact(
         conversation_id=conversation_id,

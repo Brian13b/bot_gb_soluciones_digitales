@@ -113,19 +113,16 @@ class Contact(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     conversation_id = Column(UUID(as_uuid=True), ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False, index=True)
 
-    # Contact data
     name = Column(String(255), nullable=True)
     email = Column(String(255), nullable=True, index=True)
     phone = Column(String(30), nullable=True, index=True)
 
-    # Metadata
     contact_type = Column(Enum(ContactType), default=ContactType.PRIMARY)
     source_field = Column(Enum(SourceField), nullable=False)
     extraction_method = Column(Enum(ExtractionMethod), nullable=False)
     validation_status = Column(Enum(ValidationStatus), default=ValidationStatus.PENDING)
     confidence_score = Column(Float, default=0.0)
 
-    # Audit trail
     captured_by = Column(String(50), nullable=False)
     captured_at = Column(DateTime, default=datetime.utcnow)
     validated_at = Column(DateTime, nullable=True)
